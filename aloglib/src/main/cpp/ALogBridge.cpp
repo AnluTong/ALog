@@ -7,19 +7,13 @@
 static const char *sBridgeClassName = "me/andrew/aloglib/ALog";
 static IBuffer *buffer;
 static IWriter *writer;
+void resetPtr();
 
 static void initALog(JNIEnv *env, jobject instance, jstring jBufferPath, jint jCapacity, jstring jLogPath) {
     const char *bufferPath = env->GetStringUTFChars(jBufferPath, 0);
     const char *logPath = env->GetStringUTFChars(jLogPath, 0);
     size_t capacity = static_cast<size_t>(jCapacity);
-    if (buffer) {
-        delete buffer;
-        buffer = NULL;
-    }
-    if (writer) {
-        delete writer;
-        writer = NULL;
-    }
+    resetPtr();
 
     DependencyFactory factory = DependencyFactory();
     writer = factory.getWriter(logPath);
@@ -48,13 +42,9 @@ static void writeALog(JNIEnv *env, jobject instance, jstring jLog) {
 
 static void releaseALog(JNIEnv *env, jobject instance) {
     if (buffer) {
-        delete buffer;
-        buffer = NULL;
+        buffer->flush();
     }
-    if (writer) {
-        delete writer;
-        writer = NULL;
-    }
+    resetPtr();
 }
 
 static void changeLogPathALog(JNIEnv *env, jobject instance, jstring jLogFilePath) {
@@ -69,6 +59,17 @@ static void changeLogPathALog(JNIEnv *env, jobject instance, jstring jLogFilePat
 static void flushALog(JNIEnv *env, jobject instance) {
     if (buffer) {
         buffer->flush();
+    }
+}
+
+void resetPtr() {
+    if (buffer) {
+        delete buffer;
+        buffer = NULL;
+    }
+    if (writer) {
+        delete writer;
+        writer = NULL;
     }
 }
 
@@ -123,6 +124,7 @@ JNI_OnUnload(JavaVM *vm, void *reserved) {
     if (vm->GetEnv((void **) &env, JNI_VERSION_1_4) != JNI_OK) {
         return;
     }
+    resetPtr();
 }
 
 #ifdef __cplusplus

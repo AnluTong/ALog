@@ -41,6 +41,7 @@ public:
         memcpy(initPtr + LEN_LEN, &curLen, sizeof(size_t));
 
         memcpy(workPtr, log, len);
+        workPtr += len;
     }
 
     void flush(char *dest) {
@@ -54,26 +55,31 @@ public:
         if (len < HEAD_LEN) {
             return NULL;
         }
+
         char head[HEAD_LEN] = {};
-        char *content = new char[len - HEAD_LEN];
         int ret = 0;
+        size_t resultLen = 0;
         ret = read(fd, head, HEAD_LEN);
 
         bool available = false;
         if (ret == HEAD_LEN) {
-            char m[4] = {};
-            memcpy(m, head, strlen(m));
-            //只校验魔数
-            char magic[] = {'A', 'L', 'O', 'G'};
-            if (strcmp(magic, m) == 0) {
-                available = true;
+            if (head[0] == 'A'
+                && head[1] == 'L'
+                && head[2] == 'O'
+                && head[3] == 'G') {
+                memcpy(&resultLen, head + LEN_LEN, sizeof(size_t));
+                if (resultLen > 0) {
+                    available = true;
+                }
             }
+
         }
         if (!available) {
             return NULL;
         }
 
-        read(fd, content, strlen(content));
+        char *content = new char[resultLen];
+        read(fd, content, resultLen);
         lseek(fd, 0L, SEEK_SET);
         return content;
     }

@@ -21,11 +21,6 @@ FileWriter::~FileWriter() {
     exit = true;
     taskCondition.notify_all();
     taskThread.join();
-
-    if (file) {
-        fclose(file);
-        file = NULL;
-    }
 }
 
 FileWriter::FileWriter(const char *path) {
@@ -47,6 +42,8 @@ void FileWriter::handleTask() {
             delete[] log;
         }
         if (exit) {
+            fclose(file);
+            file = NULL;
             return;
         }
         taskCondition.wait(lock);
