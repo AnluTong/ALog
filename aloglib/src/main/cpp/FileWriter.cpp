@@ -20,7 +20,6 @@ void FileWriter::changeLogPath(const char *path) {
 FileWriter::~FileWriter() {
     exit = true;
     taskCondition.notify_all();
-    taskThread.join();
 }
 
 FileWriter::FileWriter(const char *path) {
